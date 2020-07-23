@@ -1,14 +1,16 @@
 ---
-title: "RSPCA report on animal outcomes from our shelters, care and adoption centres"
 output:
   bookdown::pdf_document2:
     toc: false
-    latex_engine: pdflatex
+    latex_engine: xelatex
+    extra_dependencies: ["float"]
+    number_sections: false
 linestretch: 1.5
+mainfont: Arial
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.align = "center", out.width = "65%", dpi = 300)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.align = "center", out.width = "65%", dpi = 300, fig.pos = "H")
 
 library(dplyr)
 library(tidyr)
@@ -19,8 +21,9 @@ library(forcats)
 library(glue)
 library(purrr)
 library(RColorBrewer)
-library(patchwork)
+library(extrafont)
 library(stringr)
+library(ggtext)
 
 source(here::here("2020", "2020-07-21", "functions.R"))
 
@@ -31,9 +34,12 @@ last_5_years <- (analysis_year - 4):analysis_year
 theme_set(theme_rspca())
 ```
 
-```{r raw-data, cache = TRUE}
-rspca_tt <- tt_load("2020-07-21")
-animal_outcomes <- rspca_tt[["animal_outcomes"]]
+---
+title: "`r glue('RSPCA report on animal outcomes from our shelters, care and adoption centres: {analysis_year_text}')`"
+---
+
+```{r data}
+animal_outcomes <- readRDS(here::here("2020", "2020-07-21", "animal_outcomes.rds"))
 ```
 
 ```{r clean-data}
@@ -65,8 +71,10 @@ live_release_rate <- animal_outcomes_total %>%
   summarise(prop_outcome = sum(prop)) %>%
   ungroup() %>%
   arrange(animal_type) %>%
-  mutate(previous_year_diff = prop_outcome - lag(prop_outcome),
-         outcome = "Live Release")
+  mutate(
+    previous_year_diff = prop_outcome - lag(prop_outcome),
+    outcome = "Live Release"
+  )
 
 # Calculate % of each outcome, by year and animal type
 outcomes_breakdown <- animal_outcomes_total %>%
@@ -126,27 +134,25 @@ ten_years_adopted_reunited_by_animal <- ten_years_adopted_reunited_released %>%
   map(~ sum(.x[["n"]]))
 ```
 
-The RSPCA is Australia’s oldest, largest and most trusted animal welfare organisation. With this privileged position comes great responsibility. This year we received^[Received throughout this report refers to all animals in RSPCA facilities during the `r analysis_year_text` financial year.] `r comma(analysis_year_n_received)` animals into our animal shelters and adoption centres across the country.
+The RSPCA is Australia's oldest, largest and most trusted animal welfare organisation. With this privileged position comes great responsibility. This year we received^[Received throughout this report refers to all animals in RSPCA facilities during the `r analysis_year_text` financial year.] `r comma(analysis_year_n_received)` animals into our animal shelters and adoption centres across the country.
 
 We are pleased to report that over the past 10 years we have adopted out, reunited with their owners or released back into the wild `r comma(ten_years_adopted_reunited_released_n)` animals. This includes `r comma(ten_years_adopted_reunited_by_animal[["Dogs"]])` dogs/puppies and `r comma(ten_years_adopted_reunited_by_animal[["Cats"]])` cats/kittens that were adopted or reunited with owners.
 
 With a great deal of effort from RSPCAs all over the country, adoption and reclaiming rates nationally have been increasing over time and significant improvements in the outcomes for cats and dogs (including kittens and puppies) have been achieved. This can be attributed to the introduction of new approaches and programs to increase the number of animals adopted and reunited with their owners. These include highly visible public initiatives, as well as substantial work behind-the-scenes, such as:
 
-* **Extensive promotion of the wonderful animals we have available for adoption** through [www.adoptapet.com.au](www.adoptapet.com.au), social media, events and traditional media.
+* **Extensive promotion of the wonderful animals we have available for adoption** through [adoptapet.com.au](www.adoptapet.com.au), social media, events and traditional media.
 * **Increasing community awareness and support for the value of adopting animals** from shelters and rescue groups more broadly, including through media stories and events.
-* **Additional proactive and creative adoption initiatives**, including national events such as Clear the Shelters, promotions around special days and occasions (e.g., Valentine’s Day), promotions focusing on senior animals, promoting adoption of a mother cat and kitten or two kittens together, as well as setting up adoption centres in shopping precincts and pet retail adoption partners such as PetBarn.
+* **Additional proactive and creative adoption initiatives**, including national events such as Clear the Shelters, promotions around special days and occasions (e.g., Valentine's Day), promotions focusing on senior animals, promoting adoption of a mother cat and kitten or two kittens together, as well as setting up adoption centres in shopping precincts and pet retail adoption partners such as PetBarn.
 * **Working with smaller rescue groups** to extend the reach of adoption initiatives.
 * **Providing services to reunite lost pets with their owners.**
 * **Providing community and shelter-based desexing schemes** to reduce the number of unplanned pregnancies and unwanted animals, including initiatives reaching pet owners experiencing financial hardship.
-* **Expanding foster care networks** to cater for greater numbers of animals. Animals cared for in foster homes may include pregnant animals, those with young litters, orphaned kittens and puppies, seniors, those with special needs, those recovering from surgery, those needing to build their confidence or requiring behavioural training in a home setting, and those that don’t cope well in a shelter environment.
+* **Expanding foster care networks** to cater for greater numbers of animals. Animals cared for in foster homes may include pregnant animals, those with young litters, orphaned kittens and puppies, seniors, those with special needs, those recovering from surgery, those needing to build their confidence or requiring behavioural training in a home setting, and those that don't cope well in a shelter environment.
 * **Dedicated behavioural trainers** that put in place behavioural modification and management plans for animals requiring specialist support, and who also provide post adoption behavioural classes.
 * **Advances in clinical veterinary care** including isolation facilities and improved processes in shelter disease management and surgical rehabilitation.
 * **Adoption follow up** with new owners to ensure pets are settling into their new homes and owners are provided with additional information and referral to appropriate telephone or on-site support services.
 * **Community information, awareness raising and education** targeting responsible pet ownership and working with local councils, strata committees and landlords to encourage support for pet ownership.
 * **Monitoring current research and investment in Australian-based research** to ensure evidence-based approaches to animal welfare.
 * **Passionate staff and volunteers** who work tirelessly for the animals in their care.
-
-\newpage
 
 # All animals
 
@@ -162,8 +168,6 @@ received_by_type <- animal_outcomes_total_analysis_year %>%
 received_by_type_list <- received_by_type %>%
   split(.$animal_type)
 ```
-
-In `r analysis_year_text`, the RSPCA cared for `r comma(analysis_year_n_received)` animals including `r comma(received_by_type_list[["Dogs"]][["n"]])` dogs, `r comma(received_by_type_list[["Cats"]][["n"]])` cats, `r comma(received_by_type_list[["Horses"]][["n"]])` horses, `r comma(received_by_type_list[["Livestock"]][["n"]])` livestock animals, `r comma(received_by_type_list[["Small Pets"]][["n"]])` small pets (such as mice, rabbits, guinea pigs, birds, fish and ferrets) and `r comma(received_by_type_list[["Wildlife"]][["n"]])` native and introduced wild animals such as wombats, kangaroos, possums and reptiles (see Figure \@ref(fig:animals-received-plot)).
 
 ```{r compare-previous-year}
 # Compare animals received in the analysis year to in the previous year
@@ -183,21 +187,19 @@ analysis_previous_prop_diff <- analysis_previous_n_diff / previous_year_n_receiv
 analysis_previous_decrease <- sign(analysis_previous_n_diff) == -1
 ```
 
-This was `r ifelse(analysis_previous_decrease, "a decrease", "an increase")` of `r comma(abs(analysis_previous_n_diff))` animals or `r percent2(analysis_previous_prop_diff)` from `r glue("{previous_year}-{previous_year + 1}")` when we received^[Note: The total number of animals coming into the care of the RSPCA can be influenced by many factors including the number of local council animal management (pound) contracts the RSPCA might manage in any one year.] `r comma(previous_year_n_received)` animals.
+In `r analysis_year_text`, the RSPCA cared for `r comma(analysis_year_n_received)` animals including `r comma(received_by_type_list[["Dogs"]][["n"]])` dogs, `r comma(received_by_type_list[["Cats"]][["n"]])` cats, `r comma(received_by_type_list[["Horses"]][["n"]])` horses, `r comma(received_by_type_list[["Livestock"]][["n"]])` livestock animals, `r comma(received_by_type_list[["Small Pets"]][["n"]])` small pets (such as mice, rabbits, guinea pigs, birds, fish and ferrets) and `r comma(received_by_type_list[["Wildlife"]][["n"]])` native and introduced wild animals such as wombats, kangaroos, possums and reptiles. This was `r ifelse(analysis_previous_decrease, "a decrease", "an increase")` of `r comma(abs(analysis_previous_n_diff))` animals (`r percent2(abs(analysis_previous_prop_diff))`) from `r glue("{previous_year}-{previous_year + 1}")` when we received^[Received refers to all animals in RSPCA facilities during the `r analysis_year_text` financial year. The total number of animals coming into the care of the RSPCA can be influenced by many factors including the number of local council animal management (pound) contracts the RSPCA might manage in any one year.] `r comma(previous_year_n_received)` animals.
 
-```{r animals-received-plot, fig.cap = glue("Total animals received, {analysis_year_text}.")}
+```{r animals-received-plot}
 ggplot(received_by_type, aes(x = prop, y = fct_reorder(animal_type, prop))) +
   geom_col(aes(fill = fct_reorder(animal_type, prop))) +
   geom_text(aes(label = percent2(prop)), hjust = -0.1) +
-  scale_x_continuous(labels = percent, limits = c(0, max(received_by_type[["prop"]])*1.1)) + 
-  scale_fill_brewer(palette = "BuGn") + 
+  scale_x_continuous(labels = percent, limits = c(0, max(received_by_type[["prop"]]) * 1.1)) +
+  scale_fill_brewer(palette = "BuGn") +
   labs(x = NULL, y = NULL, title = glue("Total animals received, {analysis_year_text}")) +
   theme(
     legend.position = "none"
   )
 ```
-
-\newpage
 
 # Dogs
 
@@ -217,12 +219,11 @@ dogs_reclaimed_rehomed_analysis_year <- reclaimed_rehomed_analysis_year %>%
   pull(prop_outcome)
 ```
 
-During the `r analysis_year_text` financial year, the RSPCA received^[Received refers to all dogs in RSPCA facilities during the `r analysis_year_text` financial year.] `r comma(dogs_analysis_year_total)` dogs with `r percent2(dogs_reclaimed_rehomed_analysis_year)` of dogs being adopted or reunited with their owners (see Figure \@ref(fig:dogs-outcomes-over-time-plot)).
+During the `r analysis_year_text` financial year, the RSPCA received `r comma(dogs_analysis_year_total)` dogs with `r percent2(dogs_reclaimed_rehomed_analysis_year)` of dogs being adopted or reunited with their owners.
 
-```{r dogs-outcomes-over-time-plot, fig.cap = glue("Outcomes for {tolower(animal_type)}, over time.")}
+```{r dogs-outcomes-over-time-plot}
 plot_outcomes_over_time("Dogs")
 ```
-
 
 ```{r dogs-lrr}
 # Calculate live release rate for dogs
@@ -233,25 +234,23 @@ lrr_dogs_analysis_year <- lrr_dogs %>%
   filter(year == analysis_year)
 ```
 
-An additional measure for monitoring change over time is what’s called the live release rate (LRR). The `r analysis_year_text` LRR for dogs was `r percent2(lrr_dogs_analysis_year[["prop_outcome"]])`, which is `r ifelse(sign(lrr_dogs_analysis_year[["previous_year_diff"]]) == -1, "a decrease", "an increase")` of `r percent2(lrr_dogs_analysis_year[["previous_year_diff"]])` compared to the previous year. The LRR is the percentage of dogs that were adopted, reclaimed by their owner or transferred to a rescue group or other non-RSPCA facility as a percentage of the total number of dogs received (not including those currently in care or categorised as ‘other’) for the `r analysis_year_text` financial year.
+An additional measure for monitoring change over time is what's called the **live release rate** (LRR). The LRR is the percentage of dogs that were adopted, reclaimed by their owner or transferred to a rescue group or other non-RSPCA facility as a percentage of the total number of dogs received (not including those currently in care or categorised as ‘other') for the `r analysis_year_text` financial year. The `r analysis_year_text` LRR for dogs was `r percent2(lrr_dogs_analysis_year[["prop_outcome"]])`, which is `r ifelse(sign(lrr_dogs_analysis_year[["previous_year_diff"]]) == -1, "a decrease", "an increase")` of `r percent2(lrr_dogs_analysis_year[["previous_year_diff"]])` compared to the previous year. 
 
 ```{r dogs-lrr-plot}
 plot_lrr("Dogs")
 ```
 
-Many more owners reclaim lost dogs from the RSPCA than they do lost cats (`r comma(reclaimed[["Dogs"]][["n"]])` or `r percent2(reclaimed[["Dogs"]][["prop_outcome"]])` of dogs compared to `r comma(reclaimed[["Cats"]][["n"]])` or `r percent2(reclaimed[["Cats"]][["prop_outcome"]])` of cats).
-
-The increased use of microchip identification for dogs supports reuniting lost dogs with their owner. This increase in adoption and reuniting with owners is also the result of our proactive tracing services, care, and rehabilitation activities leading to a decrease in euthanasia.
+Many more owners reclaim lost dogs from the RSPCA than they do lost cats (`r comma(reclaimed[["Dogs"]][["n"]])` or `r percent2(reclaimed[["Dogs"]][["prop_outcome"]])` of dogs compared to `r comma(reclaimed[["Cats"]][["n"]])` or `r percent2(reclaimed[["Cats"]][["prop_outcome"]])` of cats). The increased use of microchip identification for dogs supports reuniting lost dogs with their owner. This increase in adoption and reuniting with owners is also the result of our proactive tracing services, care, and rehabilitation activities leading to a decrease in euthanasia.
 
 Sadly, `r percent2(euthanased[["Dogs"]][["prop_outcome"]])` (`r comma(euthanased[["Dogs"]][["n"]])`) of dogs/puppies were still humanely euthanased. We remain focused on adopting all animals that are suitable for adoption.
-
-\newpage
 
 # Cats
 
 ```{r cats-data}
+animal_type <- "Dogs"
+
 cats_analysis_year <- animal_outcomes_total_analysis_year %>%
-  filter(animal_type == "Cats") %>%
+  filter(animal_type == !!animal_type) %>%
   mutate(prop = n / sum(n)) %>%
   ungroup()
 
@@ -263,36 +262,45 @@ cats_analysis_year_total <- cats_analysis_year %>%
   pull(n)
 ```
 
-The proportion of cats and kittens who have been adopted by the RSPCA remains at a similar level this year, `r percent2(cats_analysis_year_outcomes[["Rehomed"]][["prop"]])` (`r comma(cats_analysis_year_outcomes[["Rehomed"]][["n"]])` cats), reflecting the continued success of new adoption approaches and programs (see figures 6, 7 and 8). The proportion of cats reclaimed by their owners this year has increased compared to the previous year to `r percent2(cats_analysis_year_outcomes[["Reclaimed"]][["prop"]])` (`r comma(cats_analysis_year_outcomes[["Reclaimed"]][["n"]])` cats), possibly due to the increasing uptake of microchip identification for cats.
+The proportion of cats and kittens who have been adopted by the RSPCA remains at a similar level this year, `r percent2(cats_analysis_year_outcomes[["Rehomed"]][["prop"]])` (`r comma(cats_analysis_year_outcomes[["Rehomed"]][["n"]])` cats), reflecting the continued success of new adoption approaches and programs. The proportion of cats reclaimed by their owners this year has increased compared to the previous year to `r percent2(cats_analysis_year_outcomes[["Reclaimed"]][["prop"]])` (`r comma(cats_analysis_year_outcomes[["Reclaimed"]][["n"]])` cats), possibly due to the increasing uptake of microchip identification for cats.
 
 ```{r cats-outcomes-over-time-plot}
-plot_outcomes_over_time("Cats")
+plot_outcomes_over_time(animal_type)
 ```
 
 ```{r lrr-cats}
 live_release_rate_cats <- live_release_rate %>%
-  filter(animal_type == "Cats")
+  filter(animal_type == !!animal_type)
 
 analysis_year_cats_lrr <- live_release_rate_cats %>%
   filter(year == analysis_year)
 ```
 
-An additional measure for monitoring change over time is the live release rate (LRR). The `r analysis_year_text` live release rate for cats and kittens was `r analysis_year_cats_lrr[["lrr"]]`, which is the highest LRR we have achieved to date. The LRR is the percentage of cats that were adopted, reclaimed by their owner or transferred to a rescue group or other non-RSPCA facility as a percentage of the total number of cats received1 (not including those currently in care or categorised as ‘other’) for the `r analysis_year_text` financial year.
+The `r analysis_year_text` live release rate for cats and kittens was `r percent2( analysis_year_cats_lrr[["prop_outcome"]])`, which is the highest LRR we have achieved to date. The LRR is the percentage of cats that were adopted, reclaimed by their owner or transferred to a rescue group or other non-RSPCA facility as a percentage of the total number of dogs received (not including those currently in care or categorised as ‘other’) for the `r analysis_year_text` financial year.
 
 ```{r cats-lrr-plot}
-plot_lrr("Cats")
+plot_lrr(animal_type)
 ```
 
+```{r cats-euthanized}
+cats_euthanized_diff <- outcomes_breakdown %>%
+  filter(animal_type == !!animal_type,
+         outcome == "Euthanized") %>%
+  arrange(year) %>%
+  mutate(previous_year_diff = prop_outcome - lag(prop_outcome)) %>%
+  filter(year == analysis_year) %>%
+  pull(previous_year_diff)
+```
 
-Despite a similar percentage of cats and kittens being adopted and a higher percentage reclaimed than in the previous year, unfortunately, `r percent2(euthanased[["Cats"]][["prop_outcome"]])` (`r comma(euthanased[["Cats"]][["n"]])`) of cats/kittens were still humanely euthanased. However, this is a decrease of almost TODO% from the previous year.
-
-\newpage
+Despite a similar percentage of cats and kittens being adopted and a higher percentage reclaimed than in the previous year, unfortunately, `r percent2(euthanased[["Cats"]][["prop_outcome"]])` (`r comma(euthanased[["Cats"]][["n"]])`) of cats/kittens were still humanely euthanased. However, this is `r ifelse(sign(cats_euthanized_diff) == -1, "a decrease", "an increase")` of `r percent2(abs(cats_euthanized_diff))` from the previous year.
 
 # Wildlife
 
 ```{r wildlife-data}
+animal_type <- "Wildlife"
+
 wildlife_analysis_year <- animal_outcomes_total_analysis_year %>%
-  filter(animal_type == "Wildlife") %>%
+  filter(animal_type == !!animal_type) %>%
   mutate(prop = n / sum(n)) %>%
   ungroup()
 
@@ -302,8 +310,10 @@ wildlife_analysis_year_outcomes <- wildlife_analysis_year %>%
 wildlife_analysis_year_total <- sum(wildlife_analysis_year[["n"]])
 
 wildlife_ten_years_ago_total <- animal_outcomes_total %>%
-  filter(animal_type == "Wildlife",
-         year == analysis_year - 10) %>%
+  filter(
+    animal_type == !!animal_type,
+    year == analysis_year - 10
+  ) %>%
   pull(n) %>%
   sum()
 ```
@@ -312,36 +322,8 @@ The number of wildlife presented to the RSPCA has significantly increased in the
 
 Usually, wildlife (native and introduced) is presented to the RSPCA by members of the community and private veterinary clinics because they have been injured or orphaned. RSPCA QLD particularly operates specialist wildlife clinics and receive, treat, rehabilitate and re-release wildlife.
 
-In `r analysis_year_text`, the RSPCA re-released `r percent2(wildlife_analysis_year_outcomes[["Released"]][["prop"]])` (`r comma(wildlife_analysis_year_outcomes[["Released"]][["n"]])`) of wildlife received1 following treatment and rehabilitation and transferred `r percent2(wildlife_analysis_year_outcomes[["Transferred"]][["prop"]])` (`r comma(wildlife_analysis_year_outcomes[["Transferred"]][["n"]])`) to specialist groups or other non-RSPCA facilities. Unfortunately, many of the injuries can cause significant pain and suffering and/or compromise survival in the wild and the RSPCA performs a difficult but valuable role relieving this suffering through humane euthanasia. In `r analysis_year_text`, `r percent2(wildlife_analysis_year_outcomes[["Euthanized"]][["prop"]])` of all wildlife received was humanely euthanased (see Figure 10).
+In `r analysis_year_text`, the RSPCA re-released `r percent2(wildlife_analysis_year_outcomes[["Released"]][["prop"]])` (`r comma(wildlife_analysis_year_outcomes[["Released"]][["n"]])`) of wildlife received following treatment and rehabilitation and transferred `r percent2(wildlife_analysis_year_outcomes[["Transferred"]][["prop"]])` (`r comma(wildlife_analysis_year_outcomes[["Transferred"]][["n"]])`) to specialist groups or other non-RSPCA facilities. Unfortunately, many of the injuries can cause significant pain and suffering and/or compromise survival in the wild and the RSPCA performs a difficult but valuable role relieving this suffering through humane euthanasia. In `r analysis_year_text`, `r percent2(wildlife_analysis_year_outcomes[["Euthanized"]][["prop"]])` of all wildlife received was humanely euthanased.
 
 ```{r wildlife-outcomes-over-time-plot}
-plot_outcomes_over_time("Wildlife")
+plot_outcomes_over_time(animal_type)
 ```
-
-\newpage
-
-# Trends by state/territory RSPCA
-
-```{r}
-reclaimed_rehomed_by_region <- animal_outcomes_long %>%
-  filter(year %in% last_5_years, region != "Total") %>%
-  group_by(year, animal_type, region) %>%
-  mutate(n_total = sum(n)) %>%
-  group_by(year, animal_type, region, outcome) %>%
-  summarise(prop = n/n_total) %>%
-  filter(outcome %in% c("Rehomed", "Reclaimed")) %>%
-  summarise(prop = sum(prop)) %>%
-  ungroup()
-
-reclaimed_rehomed_by_region %>%
-  filter(animal_type %in% c("Cats", "Dogs")) %>%
-ggplot(aes(x = year, y = prop, colour = region)) + 
-  geom_line() +
-  facet_wrap(vars(animal_type)) + 
-  scale_y_continuous(limits = c(0, 1), labels = percent) +
-  scale_color_brewer(palette = "Set2") + 
-  labs(x = NULL, y = NULL) + 
-  theme(legend.position = "bottom",
-        legend.title = element_blank())
-```
-
