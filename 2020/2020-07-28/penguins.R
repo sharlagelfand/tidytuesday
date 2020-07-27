@@ -118,3 +118,7 @@ penguins_plot_altered <- image_modulate(penguins_plot, saturation = 70) %>%
   image_noise()
 
 image_write(penguins_plot_altered, path = here::here("2020", "2020-07-28", "penguins_noise.png"))
+
+penguins_plot_small <- image_scale(penguins_plot_altered, 1000)
+
+image_write(penguins_plot_small, path = here::here("2020", "2020-07-28", "penguins_noise_small.png"))
